@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+  <title>Catur 3D Realistik</title>
+
+  <!-- PWA / theming -->
+  <link rel="manifest" href="manifest.webmanifest" />
+  <meta name="theme-color" content="#15120E" />
+
+  <!-- iOS Home Screen behaviour -->
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Catur 3D" />
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon-180.png" />
+
+  <!-- fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="styles.css" />
+
+  <!-- resolve bare 'three' specifiers to the local copies (works offline) -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "./vendor/three.module.js",
+      "three/addons/": "./vendor/addons/"
+    }
+  }
+  </script>
+</head>
+<body>
+  <div id="stage"></div>
+
+  <!-- top status -->
+  <div id="topbar">
+    <div class="brand">Catur&nbsp;3D</div>
+    <div class="status-row">
+      <span id="turn-dot"></span>
+      <span id="status-main">Giliran Putih</span>
+    </div>
+    <div id="status-sub"></div>
+    <div id="thinking"><span class="spinner"></span> Komputer berpikir…</div>
+  </div>
+
+  <!-- bottom controls -->
+  <div id="bottombar">
+    <button class="ctl" id="btn-new">
+      <svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v4h4"/></svg>
+      Baru
+    </button>
+    <button class="ctl" id="btn-undo">
+      <svg viewBox="0 0 24 24"><path d="M9 7 4 12l5 5"/><path d="M4 12h11a5 5 0 0 1 0 10h-1"/></svg>
+      Mundur
+    </button>
+    <button class="ctl" id="btn-flip">
+      <svg viewBox="0 0 24 24"><path d="M12 3v18"/><path d="M5 8 12 3l7 5"/><path d="M5 16l7 5 7-5"/></svg>
+      Putar
+    </button>
+    <button class="ctl" id="btn-settings">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-2.9 1.2V21a2 2 0 1 1-4 0v-.1A1.7 1.7 0 0 0 6.3 19l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.7 1.7 0 0 0 3 13H3a2 2 0 1 1 0-4h.1A1.7 1.7 0 0 0 5 6.3l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1A1.7 1.7 0 0 0 11 3.6V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 2.9 1.2l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+      Atur
+    </button>
+  </div>
+
+  <!-- settings -->
+  <div class="scrim" id="settings">
+    <div class="card">
+      <div class="eyebrow">Pengaturan</div>
+      <h2>Mode Permainan</h2>
+      <div class="row">
+        <div class="label">Lawan</div>
+        <div class="segment" id="seg-mode">
+          <button data-value="ai" class="active">Lawan Komputer</button>
+          <button data-value="2p">2 Pemain</button>
+        </div>
+      </div>
+      <div class="row" id="row-level">
+        <div class="label">Tingkat Kesulitan</div>
+        <div class="segment" id="seg-level">
+          <button data-value="easy">Mudah</button>
+          <button data-value="medium" class="active">Sedang</button>
+          <button data-value="hard">Sulit</button>
+        </div>
+      </div>
+      <div class="row" id="row-color">
+        <div class="label">Warna Kamu</div>
+        <div class="segment" id="seg-color">
+          <button data-value="w" class="active">Putih</button>
+          <button data-value="b">Hitam</button>
+        </div>
+      </div>
+      <div class="row switch-row">
+        <div class="label" style="margin:0">Suara</div>
+        <label class="switch">
+          <input type="checkbox" id="toggle-sound" checked />
+          <span class="slider"></span>
+        </label>
+      </div>
+      <button class="btn-primary" id="settings-done">Selesai</button>
+    </div>
+  </div>
+
+  <!-- promotion chooser -->
+  <div class="scrim" id="promo">
+    <div class="card">
+      <div class="eyebrow">Promosi Pion</div>
+      <h2>Pilih Bidak</h2>
+      <div class="promo-grid">
+        <button class="promo-btn" data-type="q"><span class="glyph">&#9819;</span>Ratu</button>
+        <button class="promo-btn" data-type="r"><span class="glyph">&#9820;</span>Benteng</button>
+        <button class="promo-btn" data-type="b"><span class="glyph">&#9821;</span>Gajah</button>
+        <button class="promo-btn" data-type="n"><span class="glyph">&#9822;</span>Kuda</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- game over -->
+  <div class="scrim" id="modal">
+    <div class="card">
+      <div class="eyebrow">Permainan Selesai</div>
+      <h2 id="modal-title">Skakmat!</h2>
+      <p id="modal-text"></p>
+      <button class="btn-primary" id="modal-new">Main Lagi</button>
+    </div>
+  </div>
+
+  <!-- error fallback -->
+  <div id="error">
+    <div class="card">
+      <div class="eyebrow">Ups</div>
+      <h2>Gagal memuat</h2>
+      <p id="error-msg"></p>
+      <p style="color:var(--muted)">Perangkat atau browser mungkin tidak mendukung WebGL.</p>
+    </div>
+  </div>
+
+  <script type="module" src="app.js"></script>
+  <script>
+    // Register the service worker only in a secure context (HTTPS or localhost).
+    if ('serviceWorker' in navigator &&
+        (location.protocol === 'https:' || location.hostname === 'localhost')) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('service-worker.js').catch((err) =>
+          console.warn('SW registration failed:', err)
+        );
+      });
+    }
+  </script>
+</body>
+</html>
